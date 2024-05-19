@@ -1,3 +1,4 @@
+import java.awt.Color;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -28,11 +29,25 @@ public class LoginPage implements ActionListener{
 		messageLabel.setBounds(125,250,250,35);
 		messageLabel.setFont(new Font(null,Font.ITALIC,25));
 		
+		userIDField.setBounds(125,100,200,25);
+		userPasswordField.setBounds(125,150,200,25);
+		
+		loginButton.setBounds(90,200,100,25);
+		loginButton.setFocusable(false);
+		loginButton.addActionListener(this);
+		
+		resetButton.setBounds(210,200,100,25);
+		resetButton.setFocusable(false);
+		resetButton.addActionListener(this);
 		
 		
 		frame.add(userIDLabel);
 		frame.add(userPasswordLabel);
 		frame.add(messageLabel);
+		frame.add(userIDField);
+		frame.add(userPasswordField);
+		frame.add(loginButton);
+		frame.add(resetButton);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setSize(420,420);
 		frame.setLayout(null);
@@ -40,6 +55,35 @@ public class LoginPage implements ActionListener{
 	}
 	@Override
 	public void actionPerformed(ActionEvent e) {
+		if(e.getSource()== resetButton) {
+			userIDField.setText("");
+			userPasswordField.setText("");
+		}
 		
+		if(e.getSource()==loginButton) {
+			String userID = userIDField.getText();
+			String userPassword = String.valueOf(userPasswordField.getPassword());
+			
+			if(logininfo.containsKey(userID)) {
+				if(logininfo.get(userID).equals(userPassword)) {
+					messageLabel.setForeground(Color.green);
+					messageLabel.setText("Login Successfull");
+					frame.dispose();
+//					WelcomePage welcomePage = new WelcomePage(userID);
+					CSVViewer viewer = new CSVViewer();
+					viewer.setVisible(true);
+				}
+				else {
+					messageLabel.setForeground(Color.red);
+					messageLabel.setText("Wrong Password");
+
+				}
+			}
+			else {
+				messageLabel.setForeground(Color.red);
+				messageLabel.setText("Wrong user ID");
+
+			}
+		}
 	}
 }
