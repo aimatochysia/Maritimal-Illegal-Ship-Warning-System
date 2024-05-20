@@ -4,8 +4,8 @@ public class IDandPassword {
 	HashMap<String,String> logininfo = new HashMap<String,String>();
 	
 	IDandPassword(){
-		logininfo.put("Bro","pizza");
-		logininfo.put("Brometheus","PASSWORD");
+		logininfo.put("admin","admin");
+		logininfo.put("user","password");
 		logininfo.put("azrael","pass");
 	}
 	
