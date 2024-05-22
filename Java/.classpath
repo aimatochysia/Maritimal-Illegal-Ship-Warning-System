@@ -46,5 +46,20 @@
 			<attribute name="module" value="true"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="lib" path="C:/Assignments/Binus/Software Engineering/Maritimal-Illegal-Ship-Warning-System/Java/lib/jfreechart-1.5.4.jar">
+		<attributes>
+			<attribute name="module" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="C:/Assignments/Binus/Software Engineering/Maritimal-Illegal-Ship-Warning-System/Java/lib/jcommon-1.0.24.jar">
+		<attributes>
+			<attribute name="module" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="C:/Assignments/Binus/Software Engineering/Maritimal-Illegal-Ship-Warning-System/Java/lib/commons-javaflow-1590792.jar">
+		<attributes>
+			<attribute name="module" value="true"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
