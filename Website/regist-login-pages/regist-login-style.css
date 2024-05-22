@@ -1,0 +1,22 @@
+body{
+    background-color: #b9b0b0;
+    margin:50px 0px; padding:0px;
+    text-align:center;
+    align:center;
+}
+
+form{
+    align-items: center;
+    justify-content: center;
+    grid: 100em;
+}
+
+#for-gap{
+    margin-left: 23px;
+}
+
+#register-page{
+    width: 100%;
+    justify-content: center;
+}
+
