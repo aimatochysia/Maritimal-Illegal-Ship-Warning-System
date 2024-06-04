@@ -5,7 +5,6 @@ def read_geojson_coordinates(filename):
     return line
 
 def find_substring_end(main_string, substring):
-    # Find the starting index of the substring
     start_index = main_string.find(substring)
     if start_index == -1:
         return -1
@@ -43,26 +42,22 @@ def parse_nested_structure(s):
                     number = ''
             elif char.isdigit() or char == '.':
                 number += char
-            
             index += 1
-        
         return current[0] if current else current
-    
     return parse_from_index(0)
-
-# Example usage
-nested_string = '[[[1.1,2.2]],[3.3,4.4]]'
-result = parse_nested_structure(nested_string)
-print(result)  # Output: [[[1.1, 2.2]], [3.3, 4.4]]
 
 
 def print_coordinates(coordinates):
     for coord_list in coordinates:
         for coord_pair in coord_list:
-            print(','.join(coord_pair))  # Join coordinate pair elements with commas
-        print()  # Separate coordinate lists by a blank line
+            print(','.join(coord_pair))
+        print()
 
 filename = 'layer-reference-geometry/geometry.geojson'
 lines = read_geojson_coordinates(filename)
-coordinates = get_coordinates(lines, "coordinates")
-print_coordinates(coordinates)
+coordinates = parse_nested_structure(lines)
+print("********************************")
+print(coordinates[0])
+# print(print_coordinates(lines))
+# coordinates = get_coordinates(lines, "coordinates")
+# print_coordinates(coordinates)
