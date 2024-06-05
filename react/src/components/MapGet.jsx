@@ -1,4 +1,3 @@
-// components/MapGet.jsx
 import React, { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Polygon, CircleMarker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -69,7 +68,7 @@ const MapGet = () => {
         }
       };
 
-      const maxRetries = 5; // Maximum number of retries
+      const maxRetries = 3;
       const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
       for (let attempt = 0; attempt <= maxRetries; attempt++) {

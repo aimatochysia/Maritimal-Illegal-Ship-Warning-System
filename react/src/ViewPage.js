@@ -5,7 +5,6 @@ import './ViewPageStyle.css';
 const ViewPage = () => {
   return (
     <div>
-
       <MapGet />
     </div>
   );
