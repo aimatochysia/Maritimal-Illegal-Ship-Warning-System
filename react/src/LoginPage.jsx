@@ -13,7 +13,6 @@ const LoginPage = () => {
       const user = users.find(
         (user) => user.email === email && user.password === password
       );
-      console.log(user.email, user.password);
       if (user) {
         alert('Login successful!');
         setError('');
@@ -29,9 +28,9 @@ const LoginPage = () => {
   return (
     <div className="login-container">
       <form onSubmit={handleSubmit} className="login-form">
-        <h2>Login</h2>
+        <h2 className='loginLbl'>Login</h2>
         <div className="form-group">
-          <label htmlFor="email">Email:</label>
+          <label htmlFor="email">Email</label>
           <input
             type="email"
             id="email"
@@ -41,7 +40,7 @@ const LoginPage = () => {
           />
         </div>
         <div className="form-group">
-          <label htmlFor="password">Password:</label>
+          <label htmlFor="password">Password</label>
           <input
             type="password"
             id="password"
