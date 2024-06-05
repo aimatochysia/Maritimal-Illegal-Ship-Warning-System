@@ -57,7 +57,9 @@ filename = 'layer-reference-geometry/geometry.geojson'
 lines = read_geojson_coordinates(filename)
 coordinates = parse_nested_structure(lines)
 print("********************************")
-print(coordinates[0])
+for coordinate in coordinates:
+    for x in coordinate:
+        print(x)
 # print(print_coordinates(lines))
 # coordinates = get_coordinates(lines, "coordinates")
 # print_coordinates(coordinates)
