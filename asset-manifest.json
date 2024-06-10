@@ -1,0 +1,15 @@
+{
+  "files": {
+    "main.css": "/Maritimal-Illegal-Ship-Warning-System/static/css/main.725fab29.css",
+    "main.js": "/Maritimal-Illegal-Ship-Warning-System/static/js/main.9acade4c.js",
+    "static/js/453.dcdfebac.chunk.js": "/Maritimal-Illegal-Ship-Warning-System/static/js/453.dcdfebac.chunk.js",
+    "index.html": "/Maritimal-Illegal-Ship-Warning-System/index.html",
+    "main.725fab29.css.map": "/Maritimal-Illegal-Ship-Warning-System/static/css/main.725fab29.css.map",
+    "main.9acade4c.js.map": "/Maritimal-Illegal-Ship-Warning-System/static/js/main.9acade4c.js.map",
+    "453.dcdfebac.chunk.js.map": "/Maritimal-Illegal-Ship-Warning-System/static/js/453.dcdfebac.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.725fab29.css",
+    "static/js/main.9acade4c.js"
+  ]
+}
