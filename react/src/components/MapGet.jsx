@@ -124,7 +124,7 @@ const MapGet = () => {
   return (
     <div>
       <div className="input-form" >
-        <h1>Daily Ship Watch</h1>
+        <h1>Ship Watch</h1>
         <input
           type="text"
           placeholder="Latitude"

@@ -1,65 +1,39 @@
-def read_geojson_coordinates(filename):
-    coordinates = []
-    with open(filename, 'r') as file:
-        line = file.readline()
-    return line
+from gfw import GFWAPI
+import requests
 
-def find_substring_end(main_string, substring):
-    start_index = main_string.find(substring)
-    if start_index == -1:
-        return -1
-    end_index = start_index + len(substring) - 1
-    return end_index
+# Initialize the GFW API client
+gfw_api = GFWAPI()
 
-def parse_nested_structure(s):
-    def parse_from_index(index):
-        stack = []
-        current = []
-        number = ''
-        
-        while index < len(s):
-            char = s[index]
-            
-            if char == '[':
-                if number:
-                    current.append(float(number))
-                    number = ''
-                stack.append(current)
-                current = []
-            elif char == ']':
-                if number:
-                    current.append(float(number))
-                    number = ''
-                if stack:
-                    last = stack.pop()
-                    last.append(current)
-                    current = last
-                else:
-                    break
-            elif char == ',':
-                if number:
-                    current.append(float(number))
-                    number = ''
-            elif char.isdigit() or char == '.':
-                number += char
-            index += 1
-        return current[0] if current else current
-    return parse_from_index(0)
+# Define query parameters
+query_params = {
+    "date_range": "2024-02-01,2024-01-02",  # Start date comes first, then end date
+    "geojson": {"type": "Feature", "properties": {}, "geometry": {"type": "Polygon", "coordinates": [[[95.2930, 5.4799], [141.0197, 5.4799], [141.0197, -11.0104], [95.2930, -11.0104], [95.2930, 5.4799]]]}},  # EEZ region of Indonesia polygon coordinates
+    "datasets": ["public-vessel-tracking:latest"]
+    url = 'https://gateway.api.globalfishingwatch.org/v2/4wings/report'
+    params = {
+        'spatial-resolution': 'low',
+        'temporal-resolution': 'monthly',
+        'group-by': 'gearType',
+        'datasets[0]': 'public-global-fishing-effort:latest',
+        'date-range': '2022-01-01,2022-05-01',
+        'format': 'csv'
+    }
+    headers = {
+        'Authorization': 'Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImtpZEtleSJ9.eyJkYXRhIjp7Im5hbWUiOiJJbGxlZ2FsIEZpc2hpbmcgQm9hdCBBbmFseXNlciIsInVzZXJJZCI6MzE3NDcsImFwcGxpY2F0aW9uTmFtZSI6IklsbGVnYWwgRmlzaGluZyBCb2F0IEFuYWx5c2VyIiwiaWQiOjEzNDMsInR5cGUiOiJ1c2VyLWFwcGxpY2F0aW9uIn0sImlhdCI6MTcxMDMwNTM1NywiZXhwIjoyMDI1NjY1MzU3LCJhdWQiOiJnZnciLCJpc3MiOiJnZncifQ.hjAzx39Mt1wIZunhRN6LgJ386Z1rZwcoazHpSnoRYF_oESeoREelVFS22GaXfqeoaI4VaQ_qorf6uHJyUPR4m7Mm7KIl1N6AuVQ8VLcaCRxg0RDLGGCmkBXRv15vVqXkDikIsa9Y3ctslkW3s1AmhinDSZgDCIbDJDHG4-j-iUovroNTRy1YY_wMSfY2lBSqoJdcWxmS3uR8ao5Z7Ag6fwoI_FRXRW59wEghq06M3v5poREs0t8lXuM7yAByg3OYwwHnFU9pGTY2ofbd4stPOqADisqeTkCwG2n68H7kZgCliTX4UYWAgFZWObR_Xn3sC4ZqGI2Oo9Y43Kvn8YWCEqEH75_Ii_eOCX75S-bNKdKeYAuM2u8yHjYNTynAyi4DqNpuAvJo4YLy4PpIQPCNFyy7g72xFUiVoyH0WIXSWH3s9PD3cp_6fquJWmSsGp60LEu3HK7sepovQqn4Z5D9gtLra3UnQSMuzcM6eK-RaruHqb1syvHBOPHkKCghrJRX',  # Replace [TOKEN] with your actual token
+        'Content-Type': 'application/json'
+    }
+    data = {
+        "region": {
+            "dataset": "public-eez-areas",
+            "id": 8492 #replace with Indonesia region EEZ ID
+        }
+    }
+}
+# Query vessel data
+vessel_data = gfw_api.query_vessels(**query_params)
+response = requests.post(url, params=params, headers=headers, json=data)
 
-
-def print_coordinates(coordinates):
-    for coord_list in coordinates:
-        for coord_pair in coord_list:
-            print(','.join(coord_pair))
-        print()
-
-filename = 'layer-reference-geometry/geometry.geojson'
-lines = read_geojson_coordinates(filename)
-coordinates = parse_nested_structure(lines)
-print("********************************")
-for coordinate in coordinates:
-    for x in coordinate:
-        print(x)
-# print(print_coordinates(lines))
-# coordinates = get_coordinates(lines, "coordinates")
-# print_coordinates(coordinates)
+# Print the response
+print(vessel_data)
+with open('report-indonesia.zip', 'wb') as f:
+    f.write(response.content)
