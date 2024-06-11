@@ -6,11 +6,11 @@ import pandas as pd
 # Define the URL and parameters
 url = 'https://gateway.api.globalfishingwatch.org/v2/4wings/report'
 params = {
-    'spatial-resolution': 'low',
-    'temporal-resolution': 'monthly',
-    'group-by': 'gearType',
+    'spatial-resolution': 'high',
+    'temporal-resolution': 'daily',
+    'group-by': 'mmsi',
     'datasets[0]': 'public-global-fishing-effort:latest',
-    'date-range': '2022-01-01,2022-05-01',
+    'date-range': '2022-01-01,2022-02-01',
     'format': 'csv'
 }
 
@@ -30,7 +30,6 @@ data = {
 
 # Make the POST request
 response = requests.post(url, headers=headers, params=params, json=data)
-
 # Read the response content as a ZIP file in memory
 zip_file = zipfile.ZipFile(io.BytesIO(response.content))
 

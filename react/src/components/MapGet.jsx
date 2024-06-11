@@ -8,10 +8,6 @@ import axios from 'axios';
 const MapGet = () => {
   const [geoJsonData, setGeoJsonData] = useState(null);
   const [markers, setMarkers] = useState([]);
-  const [lat, setLat] = useState('');
-  const [lon, setLon] = useState('');
-  const [title, setTitle] = useState('');
-  const [color, setColor] = useState('#3388ff');//
 
   useEffect(() => {
     fetch('/res/geometry.geojson')
@@ -25,7 +21,7 @@ const MapGet = () => {
         <Polygon 
           positions={geometry.coordinates.map(ring => ring.map(coord => [coord[1], coord[0]]))}
           color={randomColor()}
-          weight={4}//
+          weight={4}
         />
       );
     } else if (geometry.type === 'MultiPolygon') {
@@ -34,7 +30,7 @@ const MapGet = () => {
           key={index}
           positions={polygon.map(ring => ring.map(coord => [coord[1], coord[0]]))}
           color={randomColor()}
-          weight={4}//
+          weight={4}
         />
       ));
     } else {
@@ -44,19 +40,37 @@ const MapGet = () => {
   };
 
   const randomColor = () => {
-    return `#${Math.floor(Math.random() * 16777215).toString(16)}`;
+    return `#${Math.floor(Math.random() * 5).toString(16)}`;
   };
+
+  const calculateColor = (value) => {
+    const blue = 255 - Math.min(Math.max(parseInt(value), 0), 255);
+    const red = Math.min(Math.max(parseInt(value), 0), 255);
+    return `rgb(${red}, 0, ${blue})`;
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       const url = 'https://gateway.api.globalfishingwatch.org/v2/4wings/report';
+      
+      // Calculate the dates for 7 days - 6 days ago
+      const today = new Date();
+      const firstdate = new Date(today);
+      firstdate.setDate(today.getDate() - 7);
+      const seconddate = new Date(today);
+      seconddate.setDate(today.getDate() - 6);
+
+      const formatDate = (date) => date.toISOString().split('T')[0];
+
       const params = {
-        'spatial-resolution': 'low',
-        'temporal-resolution': 'monthly',
-        'group-by': 'gearType',
+        'spatial-resolution': 'high',
+        'temporal-resolution': 'daily',
+        'group-by': 'mmsi',
         'datasets[0]': 'public-global-fishing-effort:latest',
-        'date-range': '2022-01-01,2022-05-01',
+        'date-range': `${formatDate(firstdate)},${formatDate(seconddate)}`,
         'format': 'csv'
       };
+
       const headers = {
         'Authorization': 'Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImtpZEtleSJ9.eyJkYXRhIjp7Im5hbWUiOiJJbGxlZ2FsIEZpc2hpbmcgQm9hdCBBbmFseXNlciIsInVzZXJJZCI6MzE3NDcsImFwcGxpY2F0aW9uTmFtZSI6IklsbGVnYWwgRmlzaGluZyBCb2F0IEFuYWx5c2VyIiwiaWQiOjEzNDMsInR5cGUiOiJ1c2VyLWFwcGxpY2F0aW9uIn0sImlhdCI6MTcxMDMwNTM1NywiZXhwIjoyMDI1NjY1MzU3LCJhdWQiOiJnZnciLCJpc3MiOiJnZncifQ.hjAzx39Mt1wIZunhRN6LgJ386Z1rZwcoazHpSnoRYF_oESeoREelVFS22GaXfqeoaI4VaQ_qorf6uHJyUPR4m7Mm7KIl1N6AuVQ8VLcaCRxg0RDLGGCmkBXRv15vVqXkDikIsa9Y3ctslkW3s1AmhinDSZgDCIbDJDHG4-j-iUovroNTRy1YY_wMSfY2lBSqoJdcWxmS3uR8ao5Z7Ag6fwoI_FRXRW59wEghq06M3v5poREs0t8lXuM7yAByg3OYwwHnFU9pGTY2ofbd4stPOqADisqeTkCwG2n68H7kZgCliTX4UYWAgFZWObR_Xn3sC4ZqGI2Oo9Y43Kvn8YWCEqEH75_Ii_eOCX75S-bNKdKeYAuM2u8yHjYNTynAyi4DqNpuAvJo4YLy4PpIQPCNFyy7g72xFUiVoyH0WIXSWH3s9PD3cp_6fquJWmSsGp60LEu3HK7sepovQqn4Z5D9gtLra3UnQSMuzcM6eK-RaruHqb1syvHBOPHkKCghrJRX', // Replace with your actual token
         'Content-Type': 'application/json'
@@ -64,7 +78,7 @@ const MapGet = () => {
       const data = {
         "region": {
           "dataset": "public-eez-areas",
-          "id": 8492 // Replace with Indonesia region EEZ ID
+          "id": 8492
         }
       };
 
@@ -83,9 +97,18 @@ const MapGet = () => {
               Papa.parse(csvContent, {
                 complete: function (results) {
                   const data = results.data;
+                  const newMarkers = [];
                   for (let i = 1; i < data.length; i++) { // Assuming the first row is the header
-                    console.log(`${data[i][0]},${data[i][1]}`);
+                    const lat = parseFloat(data[i][0]);
+                    const lon = parseFloat(data[i][1]);
+                    const title = `MMSI:${data[i][3] ?? ''} Fishing Hour:${data[i][4] ?? ''}`;
+                    const colorValue = data[i][5];
+                    if (!isNaN(lat) && !isNaN(lon) && title && colorValue) {
+                      const color = calculateColor(colorValue);
+                      newMarkers.push({ lat, lon, title, color });
+                    }
                   }
+                  setMarkers(newMarkers);
                 }
               });
             }
@@ -111,44 +134,11 @@ const MapGet = () => {
 
     fetchData();
   }, []);
-  const handleAddMarker = () => {
-    if (!lat || !lon || !title || !color) return;
-    const newMarker = { lat: parseFloat(lat), lon: parseFloat(lon), title, color };
-    setMarkers([...markers, newMarker]);
-    setLat('');
-    setLon('');
-    setTitle('');
-    setColor('#3388ff'); // Reset to default color
-  };
 
   return (
     <div>
       <div className="input-form" >
         <h1>Ship Watch</h1>
-        <input
-          type="text"
-          placeholder="Latitude"
-          value={lat}
-          onChange={(e) => setLat(e.target.value)}
-        />
-        <input
-          type="text"
-          placeholder="Longitude"
-          value={lon}
-          onChange={(e) => setLon(e.target.value)}
-        />
-        <input
-          type="text"
-          placeholder="Title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        />
-        <input className="input-color"
-          type="color"z
-          value={color}
-          onChange={(e) => setColor(e.target.value)}
-        />
-        <button onClick={handleAddMarker}>Add Marker</button>
       </div>
       <MapContainer center={[-2.5, 117]} zoom={5} style={{ height: '100vh', width: '100%' }}>
         <TileLayer
@@ -165,7 +155,7 @@ const MapGet = () => {
             key={index}
             center={[marker.lat, marker.lon]}
             color={marker.color}
-            radius={5}
+            radius={2}
           >
             <Popup>{marker.title}</Popup>
           </CircleMarker>
