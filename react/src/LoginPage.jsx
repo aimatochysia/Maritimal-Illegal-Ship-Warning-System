@@ -1,28 +1,37 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import './LoginPageStyle.css';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const navigate = useNavigate();
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     try {
-      const response = await fetch('/users.json');
-      const users = await response.json();
-      const user = users.find(
-        (user) => user.email === email && user.password === password
-      );
-      console.log(user.email, user.password);
-      if (user) {
-        alert('Login successful!');
-        setError('');
+      const response = await fetch('http://localhost:5000/api/user/' + email, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        if (data && data.password === password) {
+          toast.success('Login successful!');
+          navigate('/view');
+        } else {
+          toast.error('Invalid email or password');
+        }
       } else {
-        setError('Email or password is incorrect');
+        toast.error('Login failed');
       }
     } catch (err) {
-      console.error('Error fetching user data:', err);
-      setError('An error occurred while trying to log in');
+      console.error('Error logging in:', err);
+      toast.error('An error occurred while trying to log in');
     }
   };
 
@@ -50,9 +59,9 @@ const LoginPage = () => {
             required
           />
         </div>
-        {error && <p style={{ color: 'red' }}>{error}</p>}
         <button type="submit" className="submit-button">Login</button>
       </form>
+      <ToastContainer />
     </div>
   );
 };
