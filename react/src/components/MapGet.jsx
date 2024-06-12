@@ -52,25 +52,25 @@ const MapGet = () => {
   useEffect(() => {
     const fetchData = async () => {
       const url = 'https://gateway.api.globalfishingwatch.org/v2/4wings/report';
-      
+    
       // Calculate the dates for 7 days - 6 days ago
       const today = new Date();
       const firstdate = new Date(today);
       firstdate.setDate(today.getDate() - 7);
       const seconddate = new Date(today);
       seconddate.setDate(today.getDate() - 6);
-
+    
       const formatDate = (date) => date.toISOString().split('T')[0];
-
+    
       const params = {
         'spatial-resolution': 'high',
-        'temporal-resolution': 'daily',
+        'temporal-resolution': 'hourly',
         'group-by': 'mmsi',
         'datasets[0]': 'public-global-fishing-effort:latest',
         'date-range': `${formatDate(firstdate)},${formatDate(seconddate)}`,
         'format': 'csv'
       };
-
+    
       const headers = {
         'Authorization': 'Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImtpZEtleSJ9.eyJkYXRhIjp7Im5hbWUiOiJJbGxlZ2FsIEZpc2hpbmcgQm9hdCBBbmFseXNlciIsInVzZXJJZCI6MzE3NDcsImFwcGxpY2F0aW9uTmFtZSI6IklsbGVnYWwgRmlzaGluZyBCb2F0IEFuYWx5c2VyIiwiaWQiOjEzNDMsInR5cGUiOiJ1c2VyLWFwcGxpY2F0aW9uIn0sImlhdCI6MTcxMDMwNTM1NywiZXhwIjoyMDI1NjY1MzU3LCJhdWQiOiJnZnciLCJpc3MiOiJnZncifQ.hjAzx39Mt1wIZunhRN6LgJ386Z1rZwcoazHpSnoRYF_oESeoREelVFS22GaXfqeoaI4VaQ_qorf6uHJyUPR4m7Mm7KIl1N6AuVQ8VLcaCRxg0RDLGGCmkBXRv15vVqXkDikIsa9Y3ctslkW3s1AmhinDSZgDCIbDJDHG4-j-iUovroNTRy1YY_wMSfY2lBSqoJdcWxmS3uR8ao5Z7Ag6fwoI_FRXRW59wEghq06M3v5poREs0t8lXuM7yAByg3OYwwHnFU9pGTY2ofbd4stPOqADisqeTkCwG2n68H7kZgCliTX4UYWAgFZWObR_Xn3sC4ZqGI2Oo9Y43Kvn8YWCEqEH75_Ii_eOCX75S-bNKdKeYAuM2u8yHjYNTynAyi4DqNpuAvJo4YLy4PpIQPCNFyy7g72xFUiVoyH0WIXSWH3s9PD3cp_6fquJWmSsGp60LEu3HK7sepovQqn4Z5D9gtLra3UnQSMuzcM6eK-RaruHqb1syvHBOPHkKCghrJRX', // Replace with your actual token
         'Content-Type': 'application/json'
@@ -81,31 +81,77 @@ const MapGet = () => {
           "id": 8492
         }
       };
-
-      const maxRetries = 3;
+    
+      const maxRetries = 5;
       const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-
+    
       for (let attempt = 0; attempt <= maxRetries; attempt++) {
         try {
           const response = await axios.post(url, data, { params, headers, responseType: 'arraybuffer' });
           const zip = new JSZip();
           const zipContent = await zip.loadAsync(response.data);
-
+    
+          const newMarkers = [];
+    
           zipContent.forEach(async (relativePath, file) => {
             if (file.name.endsWith('.csv')) {
               const csvContent = await file.async('text');
               Papa.parse(csvContent, {
-                complete: function (results) {
+                complete: async function (results) {
                   const data = results.data;
-                  const newMarkers = [];
-                  for (let i = 1; i < data.length; i++) { // Assuming the first row is the header
+                  for (let i = 1; i < data.length; i++) {
                     const lat = parseFloat(data[i][0]);
                     const lon = parseFloat(data[i][1]);
-                    const title = `MMSI:${data[i][3] ?? ''} Fishing Hour:${data[i][4] ?? ''}`;
-                    const colorValue = data[i][5];
-                    if (!isNaN(lat) && !isNaN(lon) && title && colorValue) {
+                    const mmsi = data[i][3];
+                    if (lat && lon) {
+                      let flag = 'NaN';
+                      let shipname = 'Unidentified';
+                      let shipinit = 'Unidentified';
+                      let callsign = 'Empty';
+                      let geartype = 'Unknown';
+                      let title = `${flag}, ${shipname}, ${callsign}, ${geartype}`;
+                      let missingvalue = 0;
+                      if (mmsi) {
+                        try {
+                          const vesselInfoResponse = await axios.get(`https://gateway.api.globalfishingwatch.org/v3/vessels/search?query=${mmsi}&datasets[0]=public-global-vessel-identity:latest&includes[0]=MATCH_CRITERIA&includes[1]=OWNERSHIP&includes[2]=AUTHORIZATIONS`, {
+                            headers: {
+                              'Authorization': 'Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImtpZEtleSJ9.eyJkYXRhIjp7Im5hbWUiOiJJbGxlZ2FsIEZpc2hpbmcgQm9hdCBBbmFseXNlciIsInVzZXJJZCI6MzE3NDcsImFwcGxpY2F0aW9uTmFtZSI6IklsbGVnYWwgRmlzaGluZyBCb2F0IEFuYWx5c2VyIiwiaWQiOjEzNDMsInR5cGUiOiJ1c2VyLWFwcGxpY2F0aW9uIn0sImlhdCI6MTcxMDMwNTM1NywiZXhwIjoyMDI1NjY1MzU3LCJhdWQiOiJnZnciLCJpc3MiOiJnZncifQ.hjAzx39Mt1wIZunhRN6LgJ386Z1rZwcoazHpSnoRYF_oESeoREelVFS22GaXfqeoaI4VaQ_qorf6uHJyUPR4m7Mm7KIl1N6AuVQ8VLcaCRxg0RDLGGCmkBXRv15vVqXkDikIsa9Y3ctslkW3s1AmhinDSZgDCIbDJDHG4-j-iUovroNTRy1YY_wMSfY2lBSqoJdcWxmS3uR8ao5Z7Ag6fwoI_FRXRW59wEghq06M3v5poREs0t8lXuM7yAByg3OYwwHnFU9pGTY2ofbd4stPOqADisqeTkCwG2n68H7kZgCliTX4UYWAgFZWObR_Xn3sC4ZqGI2Oo9Y43Kvn8YWCEqEH75_Ii_eOCX75S-bNKdKeYAuM2u8yHjYNTynAyi4DqNpuAvJo4YLy4PpIQPCNFyy7g72xFUiVoyH0WIXSWH3s9PD3cp_6fquJWmSsGp60LEu3HK7sepovQqn4Z5D9gtLra3UnQSMuzcM6eK-RaruHqb1syvHBOPHkKCghrJRX', // Replace with your actual token
+                              'Content-Type': 'application/json'
+                            }
+                          });
+                          const vesselInfo = vesselInfoResponse.data.entries[0];
+                          if (vesselInfo && vesselInfo.registryInfo && vesselInfo.registryInfo[0]) {
+                            flag = vesselInfo.registryInfo[0].flag || flag;
+                            shipname = vesselInfo.registryInfo[0].shipname || shipname;
+                            callsign = vesselInfo.registryInfo[0].callsign || callsign;
+                            geartype = vesselInfo.combinedSourcesInfo[0]?.geartypes[0]?.name || geartype;
+                            // Handling the cases based on the available data
+                            if (flag==='NaN') {
+                              if (shipname === 'Unidentified') {
+                                if (callsign === 'Empty') {
+                                  title = `${geartype}`;
+                                } else {
+                                  title = `${callsign}, ${geartype}`;
+                                }
+                              } else {
+                                title = `${shipname}, ${callsign}, ${geartype}`;
+                              }
+                            } else {
+                              title = `${flag}, ${shipname}, ${callsign}, ${geartype}`;
+                            }
+                          }
+                          if (shipname !== shipinit) {
+                            missingvalue+=1;
+                          }
+                        } catch (error) {
+                          console.error('Error fetching vessel information:', error);
+                          title = `${mmsi}`;
+                        }
+                      }
+                      let colorValue = 1;
+                      colorValue = colorValue + missingvalue*255;
                       const color = calculateColor(colorValue);
-                      newMarkers.push({ lat, lon, title, color });
+                        newMarkers.push({ lat, lon, title, color });
                     }
                   }
                   setMarkers(newMarkers);
@@ -130,7 +176,7 @@ const MapGet = () => {
           }
         }
       }
-    };
+    };    
 
     fetchData();
   }, []);
