@@ -1,7 +1,7 @@
 const express = require('express');
 const path = require('path');
 const { Client } = require('pg');
-const cors = require('cors'); // Import cors module
+const cors = require('cors');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -13,13 +13,8 @@ client.connect()
   .then(() => console.log("Connected to the database"))
   .catch(err => console.error("Database connection error:", err));
 
-// Middleware to parse JSON
 app.use(express.json());
-
-// Allow requests from all origins during development
 app.use(cors());
-
-// Serve static files from the frontend build folder
 app.use(express.static(path.join(__dirname, '../../build')));
 
 const selectUserQuery = `SELECT * FROM users WHERE email = $1;`;
@@ -27,7 +22,7 @@ const selectUserQuery = `SELECT * FROM users WHERE email = $1;`;
 async function getUserByEmail(email) {
   try {
     const result = await client.query(selectUserQuery, [email]);
-    return result.rows[0]; // Assuming email is unique, returning the first result
+    return result.rows[0];
   } catch (err) {
     console.error("Error selecting user:", err);
     throw err;
@@ -49,7 +44,6 @@ app.get('/api/user/:email', async (req, res) => {
   }
 });
 
-// Serve the frontend's index.html for all other routes
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../../build', 'index.html'));
 });
