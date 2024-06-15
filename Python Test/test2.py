@@ -1,6 +1,7 @@
 import requests
 import io
 import zipfile
+import os
 import pandas as pd
 
 # Define the URL and parameters
@@ -30,13 +31,22 @@ data = {
 
 # Make the POST request
 response = requests.post(url, headers=headers, params=params, json=data)
+
 # Read the response content as a ZIP file in memory
 zip_file = zipfile.ZipFile(io.BytesIO(response.content))
 
-# Find the CSV file within the ZIP and read it into a DataFrame
+# Extract the CSV file to a pandas DataFrame
 for file_name in zip_file.namelist():
     if file_name.endswith('.csv'):
         with zip_file.open(file_name) as csv_file:
             df = pd.read_csv(csv_file)
-            print(df.iloc[:, :6])  # Display columns 1-6
+
+        # Select only specific columns (1st, 2nd, 3rd, 4th, and 7th columns)
+        selected_columns = df.iloc[:, [0, 1, 2, 3, 6]]
+
+        # Fill empty values in column 4 with 0 and convert to integer
+        selected_columns.iloc[:, 3] = selected_columns.iloc[:, 3].fillna(0)
+        # Save the selected columns to a new CSV file
+        selected_columns.to_csv('selected_columns.csv', index=False)
+        print(f"Selected columns have been saved to 'selected_columns.csv'.")
         break

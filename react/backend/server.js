@@ -6,7 +6,7 @@ const cors = require('cors');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-const DATABASE_URL = "postgresql://petra:Cd0DF6w8zIqedvVuLb91iQ@agile-db-9455.8nk.gcp-asia-southeast1.cockroachlabs.cloud:26257/defaultdb?sslmode=verify-full";
+const DATABASE_URL = "postgres://default:0UNeuqozGaF6@ep-proud-rain-a1bew3r1.ap-southeast-1.aws.neon.tech:5432/verceldb?sslmode=require";
 const client = new Client(DATABASE_URL);
 
 client.connect()
@@ -42,10 +42,6 @@ app.get('/api/user/:email', async (req, res) => {
     console.error("Error:", err);
     res.status(500).json({ error: "Internal server error" });
   }
-});
-
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../../build', 'index.html'));
 });
 
 app.listen(PORT, () => {
